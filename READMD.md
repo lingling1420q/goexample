@@ -1,1 +1,1 @@
-READMD.md
+goexample

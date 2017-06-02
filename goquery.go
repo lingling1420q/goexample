@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/PuerkitoBio/goquery"
 	"log"
-	//	"reflect"
+	"reflect"
 )
 
 //主要是这几个结构体
@@ -42,23 +42,23 @@ func main() {
 		log.Fatal(err)
 	}
 	doc.Find(".topics .topic").Each(Parse)
-	//Find 方法反悔Selection
+	//Find 方法返回Selection
 	log.Println(".........................................................")
 	//log.Println(doc.Find(".topic").Nodes[0])
 	result, _ := doc.Find(".topic").Attr("class")
 	log.Println(result)
 
-	// firstT := doc.Find(".topics .topic")
-	// html, _ := goquery.OuterHtml(firstT)
-	// t := reflect.TypeOf(firstT)
-	// for i := 0; i < t.NumMethod(); i++ {
-	// 	m := t.Method(i)
-	// 	//fmt.Println(m.Call())
-	// 	log.Printf("%6s: %v\n", m.Name, m.Type) //获取方法的名称和类型
-	// }
+	firstT := doc.Find(".topics .topic")
+	html, _ := goquery.OuterHtml(firstT)
+	t := reflect.TypeOf(firstT)
+	for i := 0; i < t.NumMethod(); i++ {
+		m := t.Method(i)
+		//fmt.Println(m.Call())
+		log.Printf("%6s: %v\n", m.Name, m.Type) //获取方法的名称和类型
+	}
 
-	// log.Println(goquery.NodeName(firstT))
-	// log.Println(html)
-	// html, _ = firstT.Html()
-	// log.Println(html)
+	log.Println(goquery.NodeName(firstT))
+	log.Println(html)
+	html, _ = firstT.Html()
+	log.Println(html)
 }

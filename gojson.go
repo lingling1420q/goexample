@@ -55,7 +55,7 @@ func now() {
 		case int:
 			fmt.Println(k, "is int", vv)
 		case float64:
-			fmt.Println(k, "is float64", vv)
+			fmt.Println(k, "is float64", reflect.TypeOf(vv))
 		case []interface{}:
 			fmt.Println(k, "is an array:")
 			for i, u := range vv {

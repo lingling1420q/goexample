@@ -61,4 +61,9 @@ func main() {
 	log.Println(html)
 	html, _ = firstT.Html()
 	log.Println(html)
+	log.Println("------------------------------------------")
+
+	log.Println(reflect.TypeOf(doc))
+	//获取html
+	log.Println(doc.Html())
 }

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type Video struct {
+type Vide struct {
 	Durls         []Durl `xml:"durl"`
 	Result        string `xml:"result"`
 	Timelength    string `xml:"timelength"`
@@ -119,7 +119,7 @@ func main() {
 		}
 	}
 
-	v := Video{}
+	v := Vide{}
 	err = xml.Unmarshal([]byte(input), &v)
 	if err != nil {
 		fmt.Printf("error: %v", err)

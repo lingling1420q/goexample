@@ -50,11 +50,22 @@ func Info(o interface{}) {
 	fmt.Println(v.Kind() == reflect.Ptr)
 }
 
+type T struct {
+	A int
+	B string
+}
+
 func main() {
 	var user User
 	user.Id = 10
 	Info(user)
 	fmt.Println("............")
 	//Info(0)
-
+	t := T{23, "skidoo"}
+	fmt.Println("value:", reflect.ValueOf(&t))
+	v := reflect.ValueOf(&t).Elem()
+	fmt.Println("v", v)
+	a := v.FieldByName("A")
+	a.Set(reflect.ValueOf(45))
+	fmt.Println("t", &t)
 }

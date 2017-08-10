@@ -9,7 +9,7 @@ func main() {
 	var s string
 
 	s = "mongodb://waqu_crawl:crawl@123457@114.55.108.168:27017"
-
+	s = "r/wW3wsbr_QV=rBeDc4in"
 	s = url.QueryEscape(s)
 
 	fmt.Println(s)

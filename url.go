@@ -9,7 +9,7 @@ func main() {
 	var s string
 
 	s = "****"
-	s = "r/wW3wsbr_QV=rBeDc4in"
+	s = "f=header_%40input%40btn_search"
 	s = url.QueryEscape(s)
 
 	fmt.Println(s)

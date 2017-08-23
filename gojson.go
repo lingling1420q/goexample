@@ -23,6 +23,17 @@ func origin() {
 	fmt.Println("s type:", reflect.TypeOf(s))
 }
 
+func test() {
+	var s Serverslice
+	s.Servers = append(s.Servers, Server{ServerName: "Shanghai_VPN", ServerIP: "127.0.0.1"})
+	s.Servers = append(s.Servers, Server{ServerName: "Beijing_VPN", ServerIP: "127.0.0.2"})
+	b, err := json.Marshal(s)
+	if err != nil {
+		fmt.Println("json err:", err)
+	}
+	fmt.Println(string(b))
+}
+
 //上面那种解析方式是在我们知晓被解析的JSON数据的结构的前提下采取的方案，如果我们不知道被解析的数据的格式，又应该如何来解析呢？
 
 // 我们知道interface{}可以用来存储任意数据类型的对象，这种数据结构正好用于存储解析的未知结构的json数据的结果。JSON包中采用map[string]interface{}和[]interface{}结构来存储任意的JSON对象和数组。Go类型和JSON类型的对应关系如下：
@@ -70,6 +81,7 @@ func now() {
 func main() {
 	origin()
 	fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-	now()
+	test()
+	//now()
 	//格式比较乱，可以使用fmt.printf打印
 }

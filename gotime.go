@@ -138,4 +138,6 @@ func main() {
 	// formatUnixTime()
 	strToUnix()
 	fmt.Println(TimestampToHourStr(4000))
+	a := time.Now().Format(time.RFC1123)
+	fmt.Println(a)
 }

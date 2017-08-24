@@ -1,0 +1,28 @@
+package httputil
+
+import (
+	"fmt"
+	logs "github.com/yangaowei/gologs"
+	"net/http"
+	"testing"
+)
+
+func TestBase(t *testing.T) {
+	content := `POST /API/dns/planList HTTP/1.1\r\nHost: 120.26.13.218:801\r\nConnection: keep-alive\r\nContent-Length: 38\r\nPostman-Token: 7254ba5d-952c-4f73-29c1-680bd554ba07\r\nCache-Control: no-cache\r\nOrigin: chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,vi;q=0.2,zh-TW;q=0.2\r\n\r\ntoken=db2ed3f770658ff5fcb0050826f8db37`
+	req := ParseRequest(content)
+	for key, value := range req.Header {
+		logs.Log.Debug("%s:%s", key, value)
+	}
+
+	// "Server": "TornadoServer/%s" % tornado.version,
+	//         "Content-Type": "text/html; charset=UTF-8",
+	//         "Date": httputil.format_timestamp(time.time()),
+	fmt.Println("-------------------------------")
+	header := make(http.Header)
+	header.Add("Server", "golang")
+	header.Add("Content-Type", "text/html; charset=UTF-8")
+	header.Add("Date", "Sun, 27 Jan 2013 18:43:20 GMT")
+	headerStr := WriteHeader([]string{"", "200", "msg"}, header, "helloword")
+
+	fmt.Println("headerStr:", headerStr)
+}

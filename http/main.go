@@ -51,7 +51,8 @@ func handleConnection(conn net.Conn) {
 		body = fmt.Sprintf("data %s", time.Now().Format(time.RFC1123))
 	}
 	headerStr := httputil.WriteHeader([]string{"", "200", "msg"}, header, body)
-	//fmt.Printf("headerStr %#v", headerStr)
+	fmt.Printf("headerStr %#v", headerStr)
+	//time.Sleep(time.Second * 1)
 	conn.Write([]byte(headerStr + body))
 	//conn.Write([]byte(req.PostData))
 	conn.Close()

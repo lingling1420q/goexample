@@ -5,6 +5,7 @@ import (
 	logs "github.com/yangaowei/gologs"
 	"net/http"
 	"testing"
+	//"time"
 )
 
 func TestBase(t *testing.T) {
@@ -25,4 +26,14 @@ func TestBase(t *testing.T) {
 	headerStr := WriteHeader([]string{"", "200", "msg"}, header, "helloword")
 
 	fmt.Println("headerStr:", headerStr)
+}
+
+func hander(req *HTTPRequest) {
+	fmt.Println(req.String())
+	req.Finish(map[string]string{"a": "a"})
+}
+
+func TestHttpServer(t *testing.T) {
+	server := HttpServer{Port: 8888, Host: "0.0.0.0", Callback: hander}
+	server.Listen()
 }

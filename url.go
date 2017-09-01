@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 )
 
@@ -14,6 +15,12 @@ func main() {
 
 	fmt.Println(s)
 
-	a, _ := url.QueryUnescape(s)
+	a, _ := url.QueryUnescape("\"")
 	fmt.Println(a)
+
+	m, err := url.ParseQuery(`/url?x=1&y=2&y=3;z`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(m)
 }

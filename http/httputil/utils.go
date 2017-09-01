@@ -1,9 +1,12 @@
 package httputil
 
 import (
+	"bytes"
 	"fmt"
 	logs "github.com/yangaowei/gologs"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +21,18 @@ var (
 	CRLF string = "\r\n"
 )
 
+func RxOf(pattern string, content string, index int) (rcontent string) {
+	re, _ := regexp.Compile(pattern)
+	submatch := re.FindStringSubmatch(content)
+	for i, v := range submatch {
+		if i == index {
+			rcontent = v
+			break
+		}
+	}
+	return
+}
+
 func parseRequestStartLine(startLine string) (method, path, version string) {
 	logs.Log.Debug("startLine %#s", startLine)
 	V := strings.Split(startLine, " ")
@@ -25,21 +40,50 @@ func parseRequestStartLine(startLine string) (method, path, version string) {
 	return
 }
 
-func parseHeader(headerLine string) (header http.Header) {
+func parseHeader(headerByte []byte) (header http.Header) {
 	header = make(http.Header)
-	logs.Log.Debug("headerLine %#s", headerLine)
-	headerLine = strings.TrimLeft(headerLine, `\r\n`)
-	for _, line := range strings.Split(headerLine, `\r\n`) {
-		l := strings.SplitN(line, ":", 2)
-		header.Add(l[0], strings.TrimLeft(l[1], " "))
+	//headerByte = headerByte[startLinePoint+len([]byte(CRLF)) : endLinePoint]
+	for _, line := range bytes.Split(headerByte, []byte(CRLF)) {
+		l := bytes.SplitN(line, []byte(":"), 2)
+		header.Add(string(l[0]), strings.TrimLeft(string(l[1]), " "))
 	}
 	return
 }
 
-func parseBody(bodyLine string) (body string) {
-	logs.Log.Debug("bodyLine %#s", bodyLine)
+func encode(c string) string {
+	c = strings.TrimRight(c, "\"")
+	c = strings.TrimLeft(c, "\"")
+	return c
+}
 
-	return strings.TrimLeft(bodyLine, `\r\n\r\n`)
+func parseBody(contentType string, body []byte) (arguments url.Values, files map[string]interface{}) {
+	arguments = make(map[string][]string)
+	if strings.Index(contentType, "multipart/form-data") == 0 {
+		boundary := RxOf(`boundary=(.+)`, contentType, 1)
+		endBoundaryPoint := bytes.Index(body, []byte("--"+boundary+"--"))
+		for _, item := range bytes.Split(body[:endBoundaryPoint], []byte("--"+boundary+"\r\n")) {
+			if len(item) == 0 {
+				continue
+			}
+			eoh := bytes.Index(item, []byte(CRLF+CRLF))
+			for _, c := range bytes.Split(item[:eoh], []byte(";")) {
+				if bytes.Index(c, []byte("name")) >= 0 {
+					name := encode(string(bytes.Split(c, []byte("="))[1]))
+					arguments[name] = append(arguments[name], encode(string(item[eoh+4:len(item)-2])))
+				}
+			}
+		}
+	}
+	return
+}
+
+func parseQuery(query string) (value url.Values) {
+	values := strings.SplitN(query, "?", 2)
+	if len(values) == 2 {
+		value, _ = url.ParseQuery(values[1])
+	}
+
+	return
 }
 
 func ParseRequest(content string) (req Request) {
@@ -51,16 +95,16 @@ func ParseRequest(content string) (req Request) {
 		startLinePoint := strings.Index(content, `\r\n`)
 		endLinePoint := strings.Index(content, `\r\n\r\n`)
 		method, path, version := parseRequestStartLine(content[:startLinePoint])
-		header := parseHeader(content[startLinePoint:endLinePoint])
+		header := parseHeader([]byte(content[startLinePoint:endLinePoint]))
 		req.Method = strings.ToUpper(method)
 		req.Proto = version
 		req.RequestURI = path
 		req.Header = header
 		logs.Log.Debug("req.Method %#s", req.Method)
-		if req.Method == "POST" {
-			req.PostData = parseBody(content[endLinePoint:])
-			logs.Log.Debug("PostData %#s", req.PostData)
-		}
+		// if req.Method == "POST" {
+		// 	req.PostData = parseBody(content[endLinePoint:])
+		// 	logs.Log.Debug("PostData %#s", req.PostData)
+		// }
 	}
 	return
 }

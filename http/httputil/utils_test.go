@@ -29,8 +29,14 @@ func TestBase(t *testing.T) {
 }
 
 func hander(req *HTTPRequest) {
-	fmt.Println(req.String())
-	req.Finish(map[string]string{"a": "a"})
+	// body := "hello world !!!"
+	// c := fmt.Sprintf("HTTP/1.1 200 msg\r\nContent-Length: %d\r\nServer: golang/server\r\nContent-Type: text/html; charset=UTF-8\r\nDate: Mon, 28 Aug 2017 15:51:38 CST\r\n\r\n%s", len(body), body)
+	// fmt.Println(req.String())
+	// req.Finish([]byte(c))
+	handler := NewRequestHandler(req, nil)
+	//handler.Finish(map[string]string{"msg": "hellow world!"})
+	result := handler.request.Arguments
+	handler.Finish(map[string]interface{}{"result": "success", "data": result})
 }
 
 func TestHttpServer(t *testing.T) {

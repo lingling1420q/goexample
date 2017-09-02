@@ -36,7 +36,7 @@ func hander(req *HTTPRequest) {
 	handler := NewRequestHandler(req, nil)
 	//handler.Finish(map[string]string{"msg": "hellow world!"})
 	result := handler.request.Arguments
-	handler.Finish(map[string]interface{}{"result": "success", "data": result})
+	handler.Finish(map[string]interface{}{"result": "success", "data": result, "files": handler.request.Files})
 }
 
 func TestHttpServer(t *testing.T) {

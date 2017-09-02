@@ -6,6 +6,7 @@ import (
 	logs "github.com/yangaowei/gologs"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -51,13 +52,30 @@ func parseHeader(headerByte []byte) (header http.Header) {
 }
 
 func encode(c string) string {
+	c = strings.TrimSpace(c)
 	c = strings.TrimRight(c, "\"")
 	c = strings.TrimLeft(c, "\"")
 	return c
 }
 
+func parseFrom(fromData []byte) map[string]string {
+	result := make(map[string]string)
+	for _, item := range bytes.Split(fromData, []byte(";")) {
+		re, _ := regexp.Compile(`(:|=)`)
+		point := bytes.Index(item, []byte(CRLF))
+		if point > 0 {
+			item = item[:point]
+		}
+		kv := re.Split(string(item), 2)
+		result[encode(kv[0])] = encode(kv[1])
+	}
+	return result
+}
+
 func parseBody(contentType string, body []byte) (arguments url.Values, files map[string]interface{}) {
+	logs.Log.Debug("body %#v", string(body))
 	arguments = make(map[string][]string)
+	files = make(map[string]interface{})
 	if strings.Index(contentType, "multipart/form-data") == 0 {
 		boundary := RxOf(`boundary=(.+)`, contentType, 1)
 		endBoundaryPoint := bytes.Index(body, []byte("--"+boundary+"--"))
@@ -66,11 +84,16 @@ func parseBody(contentType string, body []byte) (arguments url.Values, files map
 				continue
 			}
 			eoh := bytes.Index(item, []byte(CRLF+CRLF))
-			for _, c := range bytes.Split(item[:eoh], []byte(";")) {
-				if bytes.Index(c, []byte("name")) >= 0 {
-					name := encode(string(bytes.Split(c, []byte("="))[1]))
-					arguments[name] = append(arguments[name], encode(string(item[eoh+4:len(item)-2])))
-				}
+			h := parseFrom(item[:eoh])
+			name := h["name"]
+			if filename, ok := h["filename"]; ok {
+				temporary := fmt.Sprintf("%d-%s", time.Now().Unix(), filename)
+				f, _ := os.Create(temporary)
+				f.Write([]byte(encode(string(item[eoh+4 : len(item)-2]))))
+				f.Close()
+				files[filename] = temporary
+			} else {
+				arguments[name] = append(arguments[name], encode(string(item[eoh+4:len(item)-2])))
 			}
 		}
 	}

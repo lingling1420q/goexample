@@ -75,6 +75,7 @@ func (self *HttpConnect) headerCallback(headerByte []byte) {
 
 func (self *HttpConnect) bodyCallback(bodyByte []byte) {
 	var contentType string
+	logs.Log.Debug("bodyCallback %#v", string(bodyByte))
 	if ct, ok := self.request.Headers["Content-Type"]; ok {
 		contentType = ct[0]
 		args, files := parseBody(contentType, bodyByte)
@@ -95,7 +96,7 @@ func (self *HttpConnect) readToBuffer() (size int64) {
 		self.readBuffer.Write(chuck)
 		self.readBufferSize += int64(len(chuck))
 	}
-	//logs.Log.Debug("readToBuffer %#v", string(self.readBuffer.Bytes()))
+	logs.Log.Debug("readToBuffer %#v", string(self.readBuffer.Bytes()))
 	return self.readBufferSize
 }
 
@@ -105,10 +106,15 @@ func (self *HttpConnect) readFromFd() (chunk []byte) {
 	}
 	buffer := make([]byte, ReadChunkSize)
 	sizenew, err := self.Connect.Read(buffer)
-	if err == io.EOF || sizenew < ReadChunkSize {
+	//fmt.Println("sizenew", sizenew)
+	if err == io.EOF {
 		self.closed = true
 	}
-	chunk = buffer[:sizenew]
+	if sizenew < ReadChunkSize {
+		chunk = buffer[:sizenew]
+		self.closed = true
+	}
+	//logs.Log.Debug("buffer %s", string(buffer[:sizenew]))
 	return
 }
 
@@ -125,14 +131,21 @@ func (self *HttpConnect) readUntil(delimiter string, callback func(content []byt
 
 func (self *HttpConnect) readBytes(loc int64, callback func(content []byte)) {
 	self.readToBuffer()
-	if self.readBufferSize > 0 {
-		content := self.consume(loc)
-		callback(content)
+	fmt.Println(self.readBufferSize)
+	if self.readBufferSize < loc {
+		self.closed = false
+		self.readToBuffer()
 	}
+	content := self.consume(loc)
+	callback(content)
 }
 
 func (self *HttpConnect) consume(loc int64) (content []byte) {
 	var n bytes.Buffer
+	if loc > self.readBufferSize {
+		self.closed = false
+		self.readToBuffer()
+	}
 	c := self.readBuffer.Bytes()
 	n.Write(c[loc:])
 	self.readBufferSize -= loc
@@ -167,6 +180,4 @@ func (self *HttpServer) Listen() {
 	// <-ch
 }
 
-// 2017/08/31 19:31:24 [httpserver.go:79] [D] readToBuffer "POST / HTTP/1.1\r\nHost: 120.26.13.218:8888\r\nConnection: keep-alive\r\nContent-Length: 140\r\nPostman-Token: 86025dae-725f-8602-aaca-a81fc14ed3f3\r\nCache-Control: no-cache\r\nOrigin: chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36\r\nContent-Type: multipart/form-data; boundary=----WebKitFormBoundaryL2Qz1C5HSjjrAd1c\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,vi;q=0.2,zh-TW;q=0.2\r\n\r\n------WebKitFormBoundaryL2Qz1C5HSjjrAd1c\r\nContent-Disposition: form-data; name=\"test\"\r\n\r\nasdfa\r\n------WebKitFormBoundaryL2Qz1C5HSjjrAd1c--\r\n"
-// 2017/08/31 19:31:24 [httpserver.go:112] [D] consume "------WebKitFormBoundaryL2Qz1C5HSjjrAd1c\r\nContent-Disposition: form-data; name=\"test\"\r\n\r\nasdfa\r\n------WebKitFormBoundaryL2Qz1C5HSjjrAd1c--\r\n"
-// 2017/08/31 19:31:24 [httpserver.go:113] [D] loc "------WebKitFormBoundaryL2Qz1C5HSjjrAd1c\r\nContent-Disposition: form-data; name=\"test\"\r\n\r\nasdfa\r\n------WebKitFormBoundaryL2Qz1C5HSjjrAd1c--\r\n\nCache-Control: no-cache\r\nOrigin: chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36\r\nContent-Type: multipart/form-data; boundary=----WebKitFormBoundaryL2Qz1C5HSjjrAd1c\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,vi;q=0.2,zh-TW;q=0.2\r\n\r\n"
+//------WebKitFormBoundaryDJAsBJFKlNX3Z7PI\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\naaaaa\r\n------WebKitFormBoundaryDJAsBJFKlNX3Z7PI\r\nContent-Disposition: form-data; name=\"file\"; filename=\"dump.rdb\"\r\nContent-Type: application/octet-stream\r\n\r\nREDIS0007\xfa\tredis-ver\x053.2.1\xfa\nredis-bits\xc0@\xfa\x05ctime\xc2\xd3\xdfmW\xfa\bused-mem\xc2\x10\x99\x0e\x00\xff\xfc&\x05\x99\a\n^\b\r\n------WebKitFormBoundaryDJAsBJFKlNX3Z7PI\r\nContent-Disposition: form-data; name=\"submit\"\r\n\r\nSubmit\r\n------WebKitFormBoundaryDJAsBJFKlNX3Z7PI--\r\n

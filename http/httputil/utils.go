@@ -73,7 +73,7 @@ func parseFrom(fromData []byte) map[string]string {
 }
 
 func parseBody(contentType string, body []byte) (arguments url.Values, files map[string]interface{}) {
-	logs.Log.Debug("body %#v", string(body))
+	//logs.Log.Debug("body %#v", string(body))
 	arguments = make(map[string][]string)
 	files = make(map[string]interface{})
 	if strings.Index(contentType, "multipart/form-data") == 0 {
@@ -86,7 +86,7 @@ func parseBody(contentType string, body []byte) (arguments url.Values, files map
 			eoh := bytes.Index(item, []byte(CRLF+CRLF))
 			h := parseFrom(item[:eoh])
 			name := h["name"]
-			if filename, ok := h["filename"]; ok {
+			if filename, ok := h["filename"]; ok && len(filename) > 0 {
 				temporary := fmt.Sprintf("%d-%s", time.Now().Unix(), filename)
 				f, _ := os.Create(temporary)
 				f.Write([]byte(encode(string(item[eoh+4 : len(item)-2]))))

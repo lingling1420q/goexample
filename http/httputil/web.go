@@ -17,6 +17,7 @@ var (
 )
 
 type RequestHandler struct {
+	Request        *HTTPRequest
 	request        *HTTPRequest
 	headersWritten bool
 	header         http.Header
@@ -30,7 +31,7 @@ func NewRequestHandler(req *HTTPRequest, methods []string) *RequestHandler {
 	if methods == nil {
 		methods = SUPPORTED_METHODS
 	}
-	handler := &RequestHandler{request: req, Methods: methods, statusCode: 200}
+	handler := &RequestHandler{request: req, Request: req, Methods: methods, statusCode: 200}
 	handler.header = make(http.Header)
 	handler.header.Add("Server", "golang/server")
 	handler.header.Add("Date", time.Now().Format(time.RFC1123))

@@ -10,6 +10,7 @@ import (
 	// "net/url"
 	"os"
 	"strconv"
+	"time"
 	//"strings"
 )
 
@@ -18,7 +19,7 @@ type Server interface {
 
 var (
 	ListenSize    = 128
-	ReadChunkSize = 8192
+	ReadChunkSize = 1024 * 32
 	//CRLF          = "\r\n"
 	//RequestCallback func(r *HTTPRequest)
 )
@@ -49,6 +50,13 @@ func HandlerError(e error) {
 	os.Exit(1)
 }
 
+func NewHTTPConnect(conn *net.TCPConn, callback func(req *HTTPRequest)) *HttpConnect {
+	httpConnect := &HttpConnect{Connect: conn, Callback: callback}
+	httpConnect.Connect.SetKeepAlive(true)
+	httpConnect.Connect.SetKeepAlivePeriod(3 * time.Minute)
+	return httpConnect
+}
+
 func (self *HttpConnect) Run() {
 	self.readToBuffer()
 	self.readUntil("\r\n\r\n", self.headerCallback)
@@ -75,7 +83,7 @@ func (self *HttpConnect) headerCallback(headerByte []byte) {
 
 func (self *HttpConnect) bodyCallback(bodyByte []byte) {
 	var contentType string
-	logs.Log.Debug("bodyCallback %#v", string(bodyByte))
+	//logs.Log.Debug("bodyCallback %#v", string(bodyByte))
 	if ct, ok := self.request.Headers["Content-Type"]; ok {
 		contentType = ct[0]
 		args, files := parseBody(contentType, bodyByte)
@@ -96,7 +104,8 @@ func (self *HttpConnect) readToBuffer() (size int64) {
 		self.readBuffer.Write(chuck)
 		self.readBufferSize += int64(len(chuck))
 	}
-	logs.Log.Debug("readToBuffer %#v", string(self.readBuffer.Bytes()))
+	// logs.Log.Debug("readToBuffer len %d", len(self.readBuffer.Bytes()))
+	// logs.Log.Debug("readBufferSize len %d", self.readBufferSize)
 	return self.readBufferSize
 }
 
@@ -105,13 +114,16 @@ func (self *HttpConnect) readFromFd() (chunk []byte) {
 		return
 	}
 	buffer := make([]byte, ReadChunkSize)
+	//fmt.Println("start read .....")
 	sizenew, err := self.Connect.Read(buffer)
 	//fmt.Println("sizenew", sizenew)
-	if err == io.EOF {
+	if err == io.EOF || sizenew < ReadChunkSize {
 		self.closed = true
 	}
-	if sizenew < ReadChunkSize {
+	if sizenew > 0 {
 		chunk = buffer[:sizenew]
+	}
+	if sizenew == 0 {
 		self.closed = true
 	}
 	//logs.Log.Debug("buffer %s", string(buffer[:sizenew]))
@@ -130,11 +142,14 @@ func (self *HttpConnect) readUntil(delimiter string, callback func(content []byt
 }
 
 func (self *HttpConnect) readBytes(loc int64, callback func(content []byte)) {
-	self.readToBuffer()
 	fmt.Println(self.readBufferSize)
-	if self.readBufferSize < loc {
-		self.closed = false
-		self.readToBuffer()
+	for {
+		if loc > int64(len(self.readBuffer.Bytes())) {
+			self.closed = false
+			self.readToBuffer()
+		} else {
+			break
+		}
 	}
 	content := self.consume(loc)
 	callback(content)
@@ -142,10 +157,6 @@ func (self *HttpConnect) readBytes(loc int64, callback func(content []byte)) {
 
 func (self *HttpConnect) consume(loc int64) (content []byte) {
 	var n bytes.Buffer
-	if loc > self.readBufferSize {
-		self.closed = false
-		self.readToBuffer()
-	}
 	c := self.readBuffer.Bytes()
 	n.Write(c[loc:])
 	self.readBufferSize -= loc
@@ -173,11 +184,9 @@ func (self *HttpServer) Listen() {
 	logs.Log.Debug("start server on %s", listen)
 	for {
 		conn, _ := ln.AcceptTCP()
-		httpconnect := &HttpConnect{Connect: conn, Callback: self.Callback}
+		httpconnect := NewHTTPConnect(conn, self.Callback)
 		httpconnect.Run()
 	}
 	// ch := make(chan int)
 	// <-ch
 }
-
-//------WebKitFormBoundaryDJAsBJFKlNX3Z7PI\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\naaaaa\r\n------WebKitFormBoundaryDJAsBJFKlNX3Z7PI\r\nContent-Disposition: form-data; name=\"file\"; filename=\"dump.rdb\"\r\nContent-Type: application/octet-stream\r\n\r\nREDIS0007\xfa\tredis-ver\x053.2.1\xfa\nredis-bits\xc0@\xfa\x05ctime\xc2\xd3\xdfmW\xfa\bused-mem\xc2\x10\x99\x0e\x00\xff\xfc&\x05\x99\a\n^\b\r\n------WebKitFormBoundaryDJAsBJFKlNX3Z7PI\r\nContent-Disposition: form-data; name=\"submit\"\r\n\r\nSubmit\r\n------WebKitFormBoundaryDJAsBJFKlNX3Z7PI--\r\n

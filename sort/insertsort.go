@@ -4,6 +4,9 @@ import (
 	"fmt"
 )
 
+// 二、直接插入排序
+// 将一个记录插入到已经排好序的有序表中, 从而得到一个新的,记录数增1的有序表
+// 时间复杂度也为O(n^2), 比冒泡法和选择排序的性能要更好一些
 //直接插入排序(Straight Insertion Sort)
 
 func StraighInsertSort(nums []int) {
@@ -20,6 +23,22 @@ func StraighInsertSort(nums []int) {
 			nums[j] = x
 		}
 		fmt.Println(nums, size, i)
+	}
+}
+
+func Sort(nums []int) {
+	size := len(nums)
+
+	for i := 1; i < size; i++ {
+		if nums[i] < nums[i-1] {
+			j := i
+			x := nums[i]
+			for j > 0 && x < nums[j-1] {
+				nums[j] = num[j-1]
+				j -= 1
+			}
+			nums[j] = x
+		}
 	}
 }
 

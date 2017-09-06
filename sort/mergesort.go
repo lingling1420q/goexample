@@ -35,6 +35,6 @@ func merge(left, right []int) (result []int) {
 }
 
 func main() {
-	arr := []int{3, 1, 5, 7, 2, 4, 9, 6, 10, 8}
+	arr := []int{3, 1, 5, 7, 2, 4, 9, 6, 10, 8, 20}
 	fmt.Println(mergeSort(arr))
 }

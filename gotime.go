@@ -140,4 +140,9 @@ func main() {
 	fmt.Println(TimestampToHourStr(4000))
 	a := time.Now().Format(time.RFC1123)
 	fmt.Println(a)
+
+	b := time.Now()
+	time.Sleep(3 * time.Second)
+	fmt.Println(b.Add(1 * time.Second).Before(time.Now()))
+	fmt.Println(b.Add(1 * time.Second).After(time.Now()))
 }

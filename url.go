@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"unicode"
 )
 
 func main() {
 	var s string
 
 	s = "****"
-	s = "f=header_%40input%40btn_search"
-	s = url.QueryEscape(s)
+	s = "&#29305;&#27922;&#33073;"
+	n, _ := url.Parse(s)
 
-	fmt.Println(s)
-
+	fmt.Println(n)
+	fmt.Println(unicode(s))
 	a, _ := url.QueryUnescape("\"")
 	fmt.Println(a)
 

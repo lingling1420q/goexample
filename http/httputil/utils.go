@@ -55,6 +55,7 @@ func encode(c string) string {
 	c = strings.TrimSpace(c)
 	c = strings.TrimRight(c, "\"")
 	c = strings.TrimLeft(c, "\"")
+	//c =
 	return c
 }
 
@@ -73,10 +74,10 @@ func parseFrom(fromData []byte) map[string]string {
 }
 
 func parseBody(contentType string, body []byte) (arguments url.Values, files map[string]interface{}) {
-	//logs.Log.Debug("body %#v", string(body))
 	arguments = make(map[string][]string)
 	files = make(map[string]interface{})
-	if strings.Index(contentType, "multipart/form-data") == 0 {
+	switch {
+	case strings.Index(contentType, "multipart/form-data") > -1:
 		boundary := RxOf(`boundary=(.+)`, contentType, 1)
 		endBoundaryPoint := bytes.Index(body, []byte("--"+boundary+"--"))
 		for _, item := range bytes.Split(body[:endBoundaryPoint], []byte("--"+boundary+"\r\n")) {
@@ -96,7 +97,18 @@ func parseBody(contentType string, body []byte) (arguments url.Values, files map
 				arguments[name] = append(arguments[name], encode(string(item[eoh+4:len(item)-2])))
 			}
 		}
+	case contentType == "application/x-www-form-urlencoded":
+		qs, _ := url.ParseQuery(string(body))
+		if qs != nil {
+			for k, v := range qs {
+				arguments[k] = v
+			}
+		}
+	default:
 	}
+	// if strings.Index(contentType, "multipart/form-data") == 0 {
+
+	// }
 	return
 }
 

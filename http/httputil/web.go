@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -88,6 +89,21 @@ func (self *RequestHandler) Finish(content interface{}) {
 
 func (self *RequestHandler) Write(content []byte) {
 	self.writeBuffer.Write(content)
+}
+
+type ServeMux struct {
+	mu    sync.RWMutex
+	m     map[string]muxEntry
+	hosts bool // whether any patterns contain hostnames
+}
+
+type muxEntry struct {
+	explicit bool
+	h        Handler
+	pattern  string
+}
+
+type Application struct {
 }
 
 //POST / HTTP/1.1\r\nHost: 120.26.13.218:8888\r\nConnection: keep-alive\r\nContent-Length: 140\r\nPostman-Token: 4a3ac92c-a74e-5921-d97b-2e5fb831a3ca\r\nCache-Control: no-cache\r\nOrigin: chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36\r\nContent-Type: multipart/form-data; boundary=----WebKitFormBoundarycc9rXTRINg9iTFHz\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,vi;q=0.2,zh-TW;q=0.2\r\n\r\n------WebKitFormBoundarycc9rXTRINg9iTFHz\r\nContent-Disposition: form-data; name=\"test\"\r\n\r\nasdfa\r\n------WebKitFormBoundarycc9rXTRINg9iTFHz--\r\n

@@ -2,58 +2,27 @@ package main
 
 import (
 	"./httputil"
-	"bytes"
-	"fmt"
-	"io"
-	"net"
-	"net/http"
-	"time"
+	// "bytes"
+	//"fmt"
+	// "io"
+	// "net"
+	// "net/http"
+	// "time"
 )
 
+func hander(req *httputil.HTTPRequest) {
+	// body := "hello world !!!"
+	// c := fmt.Sprintf("HTTP/1.1 200 msg\r\nContent-Length: %d\r\nServer: golang/server\r\nContent-Type: text/html; charset=UTF-8\r\nDate: Mon, 28 Aug 2017 15:51:38 CST\r\n\r\n%s", len(body), body)
+	// fmt.Println(req.String())
+	// req.Finish([]byte(c))
+	handler := httputil.NewRequestHandler(req, nil)
+	//fmt.Println(handler)
+	//handler.Finish(map[string]string{"msg": "hellow world!"})
+	result := handler.Request.Arguments
+	handler.Finish(map[string]interface{}{"result": "成功", "data": result, "files": handler.Request.Files})
+}
+
 func main() {
-	ln, err := net.Listen("tcp", ":801")
-	fmt.Println("listen on 801")
-	if err != nil {
-		handleErr(err)
-	}
-	for {
-		conn, err := ln.Accept()
-		fmt.Printf("accept conn %v\n", conn)
-		if err != nil {
-			handleErr(err)
-		}
-		go handleConnection(conn)
-	}
-}
-
-func handleErr(err error) {
-	fmt.Println(err)
-	//os.Exit(1)
-}
-
-func handleConnection(conn net.Conn) {
-	var buf bytes.Buffer
-	buffer := make([]byte, 8192)
-	for {
-		sizenew, err := conn.Read(buffer)
-		buf.Write(buffer[:sizenew])
-		if err == io.EOF || sizenew < 8192 {
-			break
-		}
-	}
-
-	content := fmt.Sprintf("%#v", buf.String())
-	//fmt.Printf("content %s:", content)
-	req := httputil.ParseRequest(content)
-	header := make(http.Header)
-	body := req.PostData
-	if req.Method == "GET" {
-		body = fmt.Sprintf("data %s", time.Now().Format(time.RFC1123))
-	}
-	headerStr := httputil.WriteHeader([]string{"", "200", "msg"}, header, body)
-	fmt.Printf("headerStr %#v", headerStr)
-	//time.Sleep(time.Second * 1)
-	conn.Write([]byte(headerStr + body))
-	//conn.Write([]byte(req.PostData))
-	conn.Close()
+	server := httputil.HttpServer{Port: 8888, Host: "0.0.0.0", Callback: hander}
+	server.Listen()
 }

@@ -180,19 +180,18 @@ func send(c net.Conn, cmd string) string {
 	return string(result)
 }
 
-func writeString(s string) error {
-	c.writeLen('$', len(s))
-	c.bw.WriteString(s)
-	_, err := c.bw.WriteString("\r\n")
-	return err
-}
+// func writeString(s string) error {
+// 	c.writeLen('$', len(s))
+// 	c.bw.WriteString(s)
+// 	_, err := c.bw.WriteString("\r\n")
+// 	return err
+// }
 
 func main() {
 	conn, err := net.Dial("tcp", "127.0.0.1:6379")
 	fmt.Println(conn, err)
-	//fmt.Println(string(writeLen('*', 1+len("waqu@test"))))
-	// send(conn, "auth waqu@test\r\n")
-	// send(conn, "select 8\r\n")
-	// send(conn, "keys *\r\n")
+	send(conn, "auth waqu\r\n")
+	send(conn, "select 8\r\n")
+	send(conn, "keys *\r\n")
 
 }

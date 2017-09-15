@@ -73,7 +73,9 @@ type dialOptions struct {
 
 func Dial(network, address string) (Conn, error) {
 	do := dialOptions{
-		dial: net.Dial,
+		dial:     net.Dial,
+		db:       8,
+		password: "waqu@test",
 	}
 	// for _, option := range options {
 	// 	option.f(&do)
@@ -298,7 +300,7 @@ var (
 
 func (c *conn) readReply() (interface{}, error) {
 	line, err := c.readLine()
-	fmt.Println("line: ", string(line))
+	//fmt.Println("line: ", string(line))
 	if err != nil {
 		return nil, err
 	}
@@ -336,6 +338,7 @@ func (c *conn) readReply() (interface{}, error) {
 		} else if len(line) != 0 {
 			return nil, protocolError("bad bulk string format")
 		}
+		fmt.Println("line: ", string(p))
 		return p, nil
 	case '*':
 		n, err := parseLen(line[1:])

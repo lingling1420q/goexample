@@ -29,9 +29,31 @@ func quickSort(a []int, low int, hight int) {
 	}
 }
 
+func quick(arr []int) {
+	x := arr[0]
+	i := 0
+	j := len(arr) - 1
+
+	for i < j {
+		for i < j && arr[j] >= x {
+			j -= 1
+		}
+		arr[i] = arr[j]
+
+		for i < j && arr[i] <= x {
+			i += 1
+		}
+		arr[j] = arr[i]
+	}
+	arr[i] = x
+	fmt.Println(arr)
+	fmt.Println(i)
+}
+
 func main() {
 	a := []int{3, 1, 5, 7, 2, 4, 9, 6, 10, 8}
-	fmt.Println(a)
-	quickSort(a, 0, 9)
-	fmt.Println(a)
+	quick(a)
+	// fmt.Println(a)
+	// quickSort(a, 0, 9)
+	// fmt.Println(a)
 }

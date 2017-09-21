@@ -3,7 +3,7 @@ package main
 import (
 	"./httputil"
 	// "bytes"
-	//"fmt"
+	"fmt"
 	// "io"
 	// "net"
 	// "net/http"
@@ -22,7 +22,23 @@ func hander(req *httputil.HTTPRequest) {
 	handler.Finish(map[string]interface{}{"result": "成功", "data": result, "files": handler.Request.Files})
 }
 
+type TestHandler struct {
+}
+
+func (self *TestHandler) Finish(rq *httputil.RequestHandler) {
+	//rq.Finish("hello word")
+	result := rq.Request.Arguments
+	rq.Finish(map[string]interface{}{"result": "成功", "data": result, "files": rq.Request.Files})
+}
+
+func (self *TestHandler) String() string {
+	return fmt.Sprintf("TestHandler")
+}
+
 func main() {
-	server := httputil.HttpServer{Port: 8888, Host: "0.0.0.0", Callback: hander}
+	httputil.NewServeMux()
+	httputil.HandleFunc("/hello", &TestHandler{})
+	//httputil.HandleFunc("/", &TestHandler{})
+	server := httputil.HttpServer{Port: 8888, Host: "0.0.0.0", Callback: httputil.Application}
 	server.Listen()
 }

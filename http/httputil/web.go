@@ -17,6 +17,11 @@ var (
 	SUPPORTED_METHODS = []string{"GET", "HEAD", "POST", "DELETE", "PATCH", "PUT", "OPTIONS"}
 )
 
+type Handler interface {
+	Finish(rh *RequestHandler)
+	String() string
+}
+
 type RequestHandler struct {
 	Request        *HTTPRequest
 	request        *HTTPRequest
@@ -53,6 +58,10 @@ func (self *RequestHandler) flush() {
 	self.request.Connection.Connect.Write(headers.Bytes())
 	self.request.Connection.Connect.Write(self.writeBuffer.Bytes())
 	self.request.Connection.Connect.Close()
+}
+
+func (self *RequestHandler) String() string {
+	return fmt.Sprintf("RequestHandler")
 }
 
 func (self *RequestHandler) generateHeaders() []byte {
@@ -103,7 +112,87 @@ type muxEntry struct {
 	pattern  string
 }
 
-type Application struct {
+func (self *ServeMux) Handle(pattern string, handler Handler) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.m[pattern] = muxEntry{explicit: true, h: handler, pattern: pattern}
 }
 
-//POST / HTTP/1.1\r\nHost: 120.26.13.218:8888\r\nConnection: keep-alive\r\nContent-Length: 140\r\nPostman-Token: 4a3ac92c-a74e-5921-d97b-2e5fb831a3ca\r\nCache-Control: no-cache\r\nOrigin: chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36\r\nContent-Type: multipart/form-data; boundary=----WebKitFormBoundarycc9rXTRINg9iTFHz\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,vi;q=0.2,zh-TW;q=0.2\r\n\r\n------WebKitFormBoundarycc9rXTRINg9iTFHz\r\nContent-Disposition: form-data; name=\"test\"\r\n\r\nasdfa\r\n------WebKitFormBoundarycc9rXTRINg9iTFHz--\r\n
+func (mux *ServeMux) match(path string) (h Handler, pattern string) {
+	// Check for exact match first.
+	v, ok := mux.m[path]
+	if ok {
+		return v.h, v.pattern
+	}
+
+	// Check for longest valid match.
+	var n = 0
+	for k, v := range mux.m {
+		if !pathMatch(k, path) {
+			continue
+		}
+		if h == nil || len(k) > n {
+			n = len(k)
+			h = v.h
+			pattern = v.pattern
+			fmt.Println(h, pattern)
+		}
+	}
+	return
+}
+
+func (mux *ServeMux) execute(req *HTTPRequest) {
+	path := req.Path
+	handler, _ := mux.match(path)
+	if handler != nil {
+		handler.Finish(NewRequestHandler(req, nil))
+	} else {
+		h := NewRequestHandler(req, nil)
+		h.statusCode = 404
+		h.Finish("404")
+	}
+	// handler.Finish(map[string]interface{}{"result": "成功!!!!", "data": result, "files": handler.GetBase().Request.Files})
+}
+
+func pathMatch(pattern, path string) bool {
+	if len(pattern) == 0 {
+		// should not happen
+		return false
+	}
+	n := len(pattern)
+	fmt.Println("pattern:", pattern, path)
+	if pattern[n-1] != '/' {
+		return pattern == path
+	}
+	return len(path) >= n && path[0:n] == pattern
+}
+
+type HandlerFunc func(content interface{})
+
+// ServeHTTP calls f(w, r).
+func (f HandlerFunc) Finish(content interface{}) {
+	f(content)
+}
+
+var DefaultServeMux = &defaultServeMux
+
+var defaultServeMux ServeMux
+
+func NewServeMux() {
+	defaultServeMux = ServeMux{m: make(map[string]muxEntry)}
+}
+
+func HandleFunc(pattern string, handler Handler) {
+	DefaultServeMux.Handle(pattern, handler)
+}
+
+func Application(req *HTTPRequest) {
+	fmt.Println("Application", req)
+	fmt.Println("m", DefaultServeMux.m)
+	DefaultServeMux.execute(req)
+	// handler := NewRequestHandler(req, nil)
+	// //fmt.Println(handler)
+	// //handler.Finish(map[string]string{"msg": "hellow world!"})
+	// result := handler.Request.Arguments
+	// handler.Finish(map[string]interface{}{"result": "成功", "data": result, "files": handler.Request.Files})
+}

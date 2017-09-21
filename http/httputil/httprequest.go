@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	//logs "github.com/yangaowei/gologs"
 )
 
@@ -15,6 +16,7 @@ type HTTPRequest struct {
 	Connection *HttpConnect
 	Method     string
 	Uri        string
+	Path       string
 	Version    string
 	Headers    http.Header
 	RemoteIp   string
@@ -31,11 +33,12 @@ func NewHTTPRequest(args ...interface{}) *HTTPRequest {
 	if qs != nil {
 		req.Arguments = qs
 	}
+	req.Path = strings.SplitN(req.Uri, "?", 2)[0]
 	return req
 }
 
 func (self *HTTPRequest) String() string {
-	return fmt.Sprintf("%s,%s,%s remoteIp:%s", self.Method, self.Uri, self.Version, self.RemoteIp)
+	return fmt.Sprintf("%s,%s,%s remoteIp:%s", self.Method, self.Path, self.Version, self.RemoteIp)
 }
 
 func (self *HTTPRequest) Finish(content []byte) {

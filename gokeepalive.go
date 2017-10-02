@@ -28,6 +28,7 @@ var (
 	client = &http.Client{
 		Transport: &http.Transport{
 			Dial: PrintLocalDial,
+			//MaxIdleConnsPerHost: 10,  默认为2
 		},
 	}
 )
@@ -63,13 +64,13 @@ func doGet1(client *http.Client, url string, id int) {
 }
 
 func main() {
-	//const URL = "http://www.baid.com/"
-	const URL = "http://120.26.13.218:8888/"
+	const URL = "http://www.baid.com/"
+	//const URL = "http://120.26.13.218:8888/"
 
 	for {
 		go doGet(client, URL, 1)
 		go doGet(client, URL, 2)
-		//go doGet(client, URL, 3)
+		go doGet(client, URL, 3)
 		time.Sleep(2 * time.Second)
 	}
 }

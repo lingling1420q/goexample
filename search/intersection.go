@@ -2,6 +2,14 @@ package main
 
 import "fmt"
 
+const (
+	// b1 = -1
+	// b2
+	// b3 = iota
+	// b4
+	a1, a2, a3 = iota, iota, iota
+)
+
 func and(a []int, b []int) []int {
 	var result []int
 	aSize := len(a)
@@ -50,4 +58,7 @@ func main() {
 
 	fmt.Println(and(a, b))
 	fmt.Println(and2(a, b))
+
+	//fmt.Println(b1, b2, b3, b4)
+	fmt.Println(a1, a2, a3)
 }

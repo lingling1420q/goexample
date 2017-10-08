@@ -54,6 +54,8 @@ func CmdAsync(cmds string) (result string) {
 }
 
 func main() {
-	result := CmdAsync("ffmpeg -i  /root/right.mp4 -b:a 500k -y /root/right_out.mp4")
-	log.Println(result)
+	// result := CmdAsync("ffmpeg -i  /root/right.mp4 -b:a 500k -y /root/right_out.mp4")
+	// log.Println(result)
+	err := exec.Command("/bin/sh", "-c", "title", "yangaowei").Start()
+	log.Println(err)
 }

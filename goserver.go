@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 )
 
 // hello world, the web server
 func HelloServer(w http.ResponseWriter, req *http.Request) {
+	c := w.(http.Response)
 	body := req.FormValue("name")
 	fmt.Println(body)
 	io.WriteString(w, body)

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
-	"strings"
+	//"strings"
 	"sync"
 	"time"
 )
@@ -42,13 +42,14 @@ func NewRequestHandler(req *HTTPRequest, methods []string) *RequestHandler {
 	handler.header.Add("Server", "golang/server")
 	handler.header.Add("Date", time.Now().Format(time.RFC1123))
 	handler.header.Add("Content-Type", "text/html; charset=UTF-8")
-	if value, ok := handler.request.Headers["Connection"]; ok && strings.ToLower(value[0]) == "keep-alive" {
-		handler.header.Add("Connection", "Keep-Alive")
-	}
+	//if value, ok := handler.request.Headers["Connection"]; ok && strings.ToLower(value[0]) == "keep-alive" {
+	handler.header.Add("Connection", "keep-alive")
+	//}
 	return handler
 }
 
 func (self *RequestHandler) flush() {
+	defer self.request.Connection.Connect.Close()
 	var headers bytes.Buffer
 	if !self.headersWritten {
 		self.headersWritten = true
@@ -57,7 +58,7 @@ func (self *RequestHandler) flush() {
 	}
 	self.request.Connection.Connect.Write(headers.Bytes())
 	self.request.Connection.Connect.Write(self.writeBuffer.Bytes())
-	self.request.Connection.Connect.Close()
+
 }
 
 func (self *RequestHandler) String() string {
@@ -66,7 +67,7 @@ func (self *RequestHandler) String() string {
 
 func (self *RequestHandler) generateHeaders() []byte {
 	var headers bytes.Buffer
-	startLine := fmt.Sprintf("%s %d %s%s", self.request.Version, self.statusCode, "", CRLF)
+	startLine := fmt.Sprintf("%s %d %sOK%s", self.request.Version, self.statusCode, "", CRLF)
 	headers.Write([]byte(startLine))
 	for key, value := range self.header {
 		//fmt.Println(key, value)
@@ -94,6 +95,7 @@ func (self *RequestHandler) Finish(content interface{}) {
 	}
 	self.flush()
 	logs.Log.Debug("finish %v", string(result))
+	//self.Request.Connection.Run()
 }
 
 func (self *RequestHandler) Write(content []byte) {
@@ -160,7 +162,7 @@ func pathMatch(pattern, path string) bool {
 		return false
 	}
 	n := len(pattern)
-	fmt.Println("pattern:", pattern, path)
+	//fmt.Println("pattern:", pattern, path)
 	if pattern[n-1] != '/' {
 		return pattern == path
 	}
@@ -187,8 +189,8 @@ func HandleFunc(pattern string, handler Handler) {
 }
 
 func Application(req *HTTPRequest) {
-	fmt.Println("Application", req)
-	fmt.Println("m", DefaultServeMux.m)
+	//fmt.Println("Application", req)
+	//fmt.Println("m", DefaultServeMux.m)
 	DefaultServeMux.execute(req)
 	// handler := NewRequestHandler(req, nil)
 	// //fmt.Println(handler)

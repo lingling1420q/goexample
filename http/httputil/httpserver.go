@@ -10,7 +10,7 @@ import (
 	// "net/url"
 	"os"
 	"strconv"
-	"time"
+	//"time"
 	//"strings"
 )
 
@@ -53,7 +53,7 @@ func HandlerError(e error) {
 func NewHTTPConnect(conn *net.TCPConn, callback func(req *HTTPRequest)) *HttpConnect {
 	httpConnect := &HttpConnect{Connect: conn, Callback: callback}
 	httpConnect.Connect.SetKeepAlive(true)
-	httpConnect.Connect.SetKeepAlivePeriod(3 * time.Minute)
+	//httpConnect.Connect.SetKeepAlivePeriod(3 * time.Minute)
 	return httpConnect
 }
 
@@ -104,8 +104,9 @@ func (self *HttpConnect) readToBuffer() (size int64) {
 		self.readBuffer.Write(chuck)
 		self.readBufferSize += int64(len(chuck))
 	}
-	// logs.Log.Debug("readToBuffer len %d", len(self.readBuffer.Bytes()))
-	// logs.Log.Debug("readBufferSize len %d", self.readBufferSize)
+	file, _ := self.Connect.File()
+	logs.Log.Debug("readToBuffer %#v,remoteip %s,fd:%d", string(self.readBuffer.Bytes()), self.Connect.RemoteAddr().String(), int(file.Fd()))
+	//logs.Log.Debug("readBufferSize len %d", self.readBufferSize)
 	return self.readBufferSize
 }
 
@@ -131,13 +132,13 @@ func (self *HttpConnect) readFromFd() (chunk []byte) {
 }
 
 func (self *HttpConnect) readUntil(delimiter string, callback func(content []byte)) {
-	self.readToBuffer()
 	if self.readBufferSize > 0 {
 		del := []byte(delimiter)
-		point := bytes.Index(self.readBuffer.Bytes(), del)
-		loc := point + len(del)
-		content := self.consume(int64(loc))
-		callback(content)
+		if point := bytes.Index(self.readBuffer.Bytes(), del); point > 0 {
+			loc := point + len(del)
+			content := self.consume(int64(loc))
+			callback(content)
+		}
 	}
 }
 
@@ -181,11 +182,12 @@ func (self *HttpServer) Listen() {
 	if err != nil {
 		HandlerError(err)
 	}
+	defer ln.Close()
 	logs.Log.Debug("start server on %s", listen)
 	for {
 		conn, _ := ln.AcceptTCP()
 		httpconnect := NewHTTPConnect(conn, self.Callback)
-		httpconnect.Run()
+		go httpconnect.Run()
 	}
 	// ch := make(chan int)
 	// <-ch

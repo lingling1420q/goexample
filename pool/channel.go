@@ -91,6 +91,7 @@ func (c *channelPool) Put(conn interface{}) error {
 	if conn == nil {
 		return errors.New("connection is nil. rejecting")
 	}
+	//if c.Len(c.conns) >=
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.conns == nil {

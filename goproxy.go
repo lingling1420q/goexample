@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	hosts = "182.92.110.245:22"
+	hosts = "198.11.179.128:8388"
 )
 
 func handleErr(err error) {
@@ -20,22 +20,23 @@ func handleErr(err error) {
 func handleConnection(conn net.Conn) {
 
 	//dst, err := net.Dial("tcp", hosts)
-	dst, err := net.DialTimeout("tcp", hosts, time.Second*10)
+	dst, err := net.DialTimeout("tcp", hosts, time.Second*1000)
 	if err != nil {
 		handleErr(err)
 	}
-	go io.Copy(dst, conn)
-	io.Copy(conn, dst)
 	defer func() {
 		conn.Close()
 		dst.Close()
 		fmt.Println("close conn")
 	}()
+	go io.Copy(dst, conn)
+	io.Copy(conn, dst)
+
 }
 
 func main() {
-	ln, err := net.Listen("tcp", ":801")
-	fmt.Println("listen on 801")
+	ln, err := net.Listen("tcp", ":8388")
+	fmt.Println("listen on 8388")
 	if err != nil {
 		handleErr(err)
 	}

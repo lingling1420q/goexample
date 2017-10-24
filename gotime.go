@@ -145,4 +145,7 @@ func main() {
 	time.Sleep(3 * time.Second)
 	fmt.Println(b.Add(1 * time.Second).Before(time.Now()))
 	fmt.Println(b.Add(1 * time.Second).After(time.Now()))
+	for item := range time.Tick(1 * time.Second) {
+		fmt.Println(item)
+	}
 }

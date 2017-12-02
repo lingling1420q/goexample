@@ -3,14 +3,12 @@ package main
 import (
 	"log"
 	"net/http"
-	// "os"
 )
 
 func main() {
-	//os.Mkdir("file", 0777)
-	http.Handle("/anchor/", http.StripPrefix("/anchor/", http.FileServer(http.Dir("/root/test/dailydeeds/operation/Anchor"))))
-	err := http.ListenAndServe(":8080", nil)
+	h := http.FileServer(http.Dir("/root/test/dailydeeds/laoban/article"))
+	err := http.ListenAndServe(":9090", h)
 	if err != nil {
-		log.Println("ListenAndServe: ", err)
+		log.Fatal("ListenAndServe: ", err)
 	}
 }

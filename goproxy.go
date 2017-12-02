@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"os"
+	//"os"
 	"time"
 )
 
 var (
-	hosts = "198.11.179.128:8388"
+	hosts = "47.88.100.3:8388"
 )
 
 func handleErr(err error) {
 	fmt.Println(err)
-	os.Exit(1)
+	//os.Exit(1)
 }
 
 func handleConnection(conn net.Conn) {

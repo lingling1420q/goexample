@@ -6,6 +6,11 @@ import (
 
 func defer1() (r int) {
 	defer func() {
+		fmt.Println("def")
+		r++
+	}()
+	defer func() {
+		fmt.Println("def2")
 		r++
 	}()
 	return 10
@@ -17,6 +22,7 @@ func defer1() (r int) {
 //      func() { //defer被插入到return之前执行，也就是赋返回值和ret指令之间
 //          result++
 //      }()
+//
 //      return
 // }
 

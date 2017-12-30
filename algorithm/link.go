@@ -56,12 +56,16 @@ func main() {
 	node5 := &SLink{value: 5}
 	node6 := &SLink{value: 6}
 	node7 := &SLink{value: 7}
+	node7 := &SLink{value: 8}
+	node7 := &SLink{value: 9}
 	node1.next = node2
 	node2.next = node3
 	node3.next = node4
 	node4.next = node5
 	node5.next = node6
 	node6.next = node7
+	node7.next = node8
+	node8.next = node9
 	print(node1)
 	fmt.Println("原始版")
 	n1 := reverse01(node1)

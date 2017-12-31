@@ -56,8 +56,8 @@ func main() {
 	node5 := &SLink{value: 5}
 	node6 := &SLink{value: 6}
 	node7 := &SLink{value: 7}
-	node7 := &SLink{value: 8}
-	node7 := &SLink{value: 9}
+	node8 := &SLink{value: 8}
+	node9 := &SLink{value: 9}
 	node1.next = node2
 	node2.next = node3
 	node3.next = node4
